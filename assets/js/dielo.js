@@ -10,7 +10,7 @@
   var work = works[index];
 
   if (!work) {
-    document.title = "Dielo sa nenašlo — Chiara Kúbeková";
+    document.title = "Dielo sa nenašlo — Chiara Kubek";
     root.innerHTML =
       '<div class="not-found">' +
         '<p class="eyebrow">404</p>' +
@@ -21,7 +21,7 @@
     return;
   }
 
-  document.title = work.title + " — Chiara Kúbeková";
+  document.title = work.title + " — Chiara Kubek";
   var metaDescription = document.querySelector('meta[name="description"]');
   var firstText = work.description.find(function (p) { return typeof p === "string"; });
   if (metaDescription && firstText) metaDescription.setAttribute("content", firstText.slice(0, 160));
@@ -72,8 +72,12 @@
     "</div>" +
     '<div class="detail-body">' +
       '<dl class="facts detail-meta reveal">' +
-        metaRow("Rok", String(work.year)) +
+        metaRow("Rok", work.year != null ? String(work.year) : "") +
         metaRow("Médium", work.type) +
+        metaRow("Skupina", (function () {
+          var cat = (window.CATEGORIES || []).find(function (c) { return c.id === work.category; });
+          return cat ? cat.label : "";
+        })()) +
         metaRow("Ateliér", work.course) +
         metaRow("Téma", work.theme) +
         metaRow("Kontext", work.context) +

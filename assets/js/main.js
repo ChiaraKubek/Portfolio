@@ -69,15 +69,37 @@
   var grid = document.getElementById("works-grid");
   var filters = document.getElementById("filters");
 
+  function previewSrc(work) {
+    // If cover is a titled SVG placeholder, prefer a real photo from the gallery when one exists.
+    var coverIsPlaceholder = /\/cover\.svg$/i.test(decodeURIComponent(work.cover || ""));
+    if (coverIsPlaceholder && work.images && work.images.length) {
+      var photo = work.images.find(function (src) {
+        return !/\.svg$/i.test(decodeURIComponent(src));
+      });
+      if (photo) return photo;
+    }
+    return work.cover;
+  }
+
   function cardHtml(work, index) {
     var href = "dielo.html?id=" + encodeURIComponent(work.slug);
+    var src = previewSrc(work);
+    var metaBits = [work.year, work.type].filter(Boolean).join(" · ");
+    var mediaClass = /\.svg$/i.test(decodeURIComponent(src))
+      ? "card-media is-placeholder"
+      : "card-media";
     return (
       '<a class="card reveal" href="' + href + '" style="--delay:' + (index % 3) * 110 + 'ms">' +
-        '<div class="card-media">' +
-          '<img src="' + escapeHtml(work.cover) + '" alt="' + escapeHtml(work.title) + '" loading="lazy" decoding="async">' +
+        '<div class="' + mediaClass + '">' +
+          '<img class="card-preview" src="' + escapeHtml(src) + '" alt="' + escapeHtml(work.title) + '" loading="lazy" decoding="async">' +
+          '<div class="card-glass" aria-hidden="true">' +
+            '<span class="card-glass-title">' + escapeHtml(work.title) + "</span>" +
+            (metaBits ? '<span class="card-glass-meta">' + escapeHtml(metaBits) + "</span>" : "") +
+          "</div>" +
         "</div>" +
         '<div class="card-body">' +
-          '<div class="card-meta"><span>' + escapeHtml(work.type) + "</span><span>" + work.year + "</span></div>" +
+          '<div class="card-meta"><span>' + escapeHtml(work.type || "") + "</span>" +
+            (work.year ? "<span>" + work.year + "</span>" : "") + "</div>" +
           '<h3 class="card-title">' + escapeHtml(work.title) + "</h3>" +
         "</div>" +
       "</a>"
@@ -85,10 +107,27 @@
   }
 
   function renderGrid(category) {
-    var list = window.WORKS.filter(function (w) {
-      return category === "all" || w.category === category;
+    var groups = (window.CATEGORIES || []).filter(function (cat) {
+      return cat.id !== "all" && (category === "all" || cat.id === category);
     });
-    grid.innerHTML = list.map(cardHtml).join("");
+
+    var html = groups.map(function (cat) {
+      var list = window.WORKS.filter(function (w) {
+        return w.category === cat.id;
+      });
+      if (!list.length) return "";
+      var headingId = "group-" + cat.id;
+      return (
+        '<section class="works-group" aria-labelledby="' + headingId + '">' +
+          '<h3 class="works-group-title reveal" id="' + headingId + '">' +
+            "<span>" + escapeHtml(cat.label) + "</span>" +
+          "</h3>" +
+          '<div class="grid">' + list.map(cardHtml).join("") + "</div>" +
+        "</section>"
+      );
+    }).join("");
+
+    grid.innerHTML = html;
     reveal(grid);
   }
 
