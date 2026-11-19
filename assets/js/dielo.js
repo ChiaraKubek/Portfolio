@@ -62,7 +62,13 @@
   }
 
   var videos = work.videos || [];
-  var images = work.images || [];
+  var isVideoWork = videos.length > 0 || /^video$/i.test(String(work.type || "").trim());
+  var images = (work.images || []).slice();
+
+  // Cover joins the gallery for non-video works (skip if already listed).
+  if (work.cover && !isVideoWork && images.indexOf(work.cover) === -1) {
+    images.unshift(work.cover);
+  }
 
   root.innerHTML =
     '<a class="back reveal" href="index.html#diela">← všetky diela</a>' +
